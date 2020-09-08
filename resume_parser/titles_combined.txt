@@ -39885,6 +39885,7 @@ Machine Joint Cutter
 Machine Lacer
 Machine Lay Out Worker
 Machine Lead Burner
+Machine Learning Engineer
 Machine Learning Intern
 Machine Leather Trimmer
 Machine Loader

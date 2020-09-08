@@ -1,0 +1,10 @@
+docx2txt>=0.8
+nltk>=3.5
+numpy>=1.19.1
+pandas>=1.1.0
+pdfminer.six>=20200517
+pdfplumber>=0.5.23
+phonenumbers>=8.12.7
+spacy>=2.3.2
+stemming>=1.0.1
+tika>=1.24

@@ -52,6 +52,19 @@ custom_nlp2 = spacy.load(os.path.join(base_path,"degree","model"))
 # initialize matcher with a vocab
 matcher = Matcher(nlp.vocab)
 
+file = os.path.join(base_path,"titles_combined.txt")
+file = open(file, "r", encoding='utf-8')
+designation = [line.strip().lower() for line in file]
+designitionmatcher = PhraseMatcher(nlp.vocab)
+patterns = [nlp.make_doc(text) for text in designation if len(nlp.make_doc(text)) < 10]
+designitionmatcher.add("Job title", None, *patterns)
+
+file = os.path.join(base_path,"LINKEDIN_SKILLS_ORIGINAL.txt")
+file = open(file, "r", encoding='utf-8')    
+skill = [line.strip().lower() for line in file]
+skillsmatcher = PhraseMatcher(nlp.vocab)
+patterns = [nlp.make_doc(text) for text in skill if len(nlp.make_doc(text)) < 10]
+skillsmatcher.add("Job title", None, *patterns)
 
 
 class resumeparse(object):
@@ -177,7 +190,8 @@ class resumeparse(object):
         'thesis',
         'theses',
     )
-    
+
+           
     def convert_docx_to_txt(docx_file):
         """
             A utility function to convert a Microsoft docx files to raw text.
@@ -470,7 +484,7 @@ class resumeparse(object):
 
             resume_text = resume_text[regex_result.end():].strip()
             regex_result = re.search(regular_expression, resume_text)
-        print(end_year , start_year)
+        
         return end_year - start_year  # Use the obtained month attribute
 
     # except Exception as exception_instance:
@@ -549,23 +563,12 @@ class resumeparse(object):
         
         return college_name
 
-    def job_designition(text, file):
+    def job_designition(text):
         job_titles = []
-
-        file = open(file, "r")
-        designation = file.readlines()
-        designation = [re.sub('\n', '', i).lower() for i in designation]
-
+        
         __nlp = nlp(text.lower())
-        matcher = PhraseMatcher(nlp.vocab)
-
-        terms = designation
-
-        # Only run nlp.make_doc to speed things up
-        patterns = [nlp.make_doc(text) for text in terms if len(nlp.make_doc(text)) < 10]
-        matcher.add("Job title", None, *patterns)
-
-        matches = matcher(__nlp)
+        
+        matches = designitionmatcher(__nlp)
         for match_id, start, end in matches:
             span = __nlp[start:end]
             job_titles.append(span.text)
@@ -577,124 +580,21 @@ class resumeparse(object):
 
         degree = [ent.text.replace("\n", " ") for ent in list(doc.ents) if ent.label_ == 'Degree']
         return list(dict.fromkeys(degree).keys())
+    
+    def extract_skills(text):
 
-    def is_punctuation(word):
-        return len(word) == 1 and word in string.punctuation
+        skills = []
 
-    def is_numeric(word):
-        try:
-            float(word) if '.' in word else int(word)
-            return True
-        except ValueError:
-            return False
+        __nlp = nlp(text.lower())
+        # Only run nlp.make_doc to speed things up
 
-    class KeywordExtractor:
-        """Extracts keywords and keyphrases from text input"""
-
-        def __init__(self):
-            self.stopwords = set(nltk.corpus.stopwords.words())
-            self.top_fraction = 1
-
-        def _generate_candidate_keywords(self, sentences, max_length=3):
-            """Creates a list of candidate keywords, or phrases of at most max_length words, from a set of sentences"""
-            phrase_list = []
-            for sentence in sentences:
-                words = map(lambda x: "|" if x in self.stopwords else x,
-                            nltk.word_tokenize(sentence.lower()))
-
-                phrase = []
-                for word in words:
-                    if word == "|" or resumeparse.is_punctuation(word):
-                        if len(phrase) > 0:
-                            if len(phrase) <= max_length:
-                                phrase_list.append(phrase)
-                            phrase = []
-                    else:
-                        phrase.append(word)
-                if len(phrase):
-                    phrase_list.append(phrase)
-
-            return phrase_list
-
-        def _calculate_word_scores(self, phrase_list):
-            """Scores words according to frequency and tendency to appear in multi-word key phrases"""
-            word_freq = nltk.FreqDist()
-            word_multiplier = nltk.FreqDist()
-            for phrase in phrase_list:
-                # Give a higher score if word appears in multi-word candidates
-                multi_word = min(2, len(list(filter(lambda x: not resumeparse.is_numeric(x), phrase))))
-                for word in phrase:
-                    # Normalize by taking the stem
-                    word_freq[stem(word)] += 1
-                    word_multiplier[stem(word)] += multi_word
-            for word in word_freq.keys():
-                word_multiplier[word] = word_multiplier[word] / float(word_freq[word])  # Take average
-            word_scores = {}
-            for word in word_freq.keys():
-                word_scores[word] = word_freq[word] * word_multiplier[word]
-
-            return word_scores
-
-        def _calculate_phrase_scores(self, phrase_list, word_scores, metric='avg'):
-            """Scores phrases by taking the average, sum, or max of the scores of its words"""
-            phrase_scores = {}
-            for phrase in phrase_list:
-                phrase_score = 0
-                if metric in ['avg', 'sum']:
-                    for word in phrase:
-                        phrase_score += word_scores[stem(word)]
-                    phrase_scores[" ".join(phrase)] = phrase_score
-                    if metric == 'avg':
-                        phrase_scores[" ".join(phrase)] = phrase_score / float(len(phrase))
-                elif metric == 'max':
-                    for word in phrase:
-                        phrase_score = word_scores[stem(word)] if word_scores[
-                                                                      stem(word)] > phrase_score else phrase_score
-                    phrase_scores[" ".join(phrase)] = phrase_score
-
-            return phrase_scores
-
-        def extract(self, text, max_length=3, metric='avg', incl_scores=False):
-            """Extract keywords and keyphrases from input text in descending order of score"""
-            sentences = nltk.tokenize.line_tokenize(text)
-            # sentences = nltk.sent_tokenize(text)
-            phrase_list = self._generate_candidate_keywords(sentences, max_length=max_length)
-
-            word_scores = self._calculate_word_scores(phrase_list)
-            phrase_scores = self._calculate_phrase_scores(phrase_list, word_scores, metric=metric)
-            sorted_phrase_scores = sorted(phrase_scores.items(), key=operator.itemgetter(1), reverse=True)
-            n_phrases = len(sorted_phrase_scores)
-
-            if incl_scores:
-                return sorted_phrase_scores[0:int(n_phrases / self.top_fraction)]
-            else:
-                return map(lambda x: x[0], sorted_phrase_scores[0:int(n_phrases / self.top_fraction)])
-
-
-    def main(file_path):
-        """Extracts keywords in order of relevance from a text file. Requires one command line argument.
-        Args:
-            file_path (str): path to text file
-        """
-        kwe = resumeparse.KeywordExtractor()
-        with open(file_path) as file:
-            
-            content = file.read()
-            
-        keywords = kwe.extract(content, incl_scores=True)
-        
-
-    def extract_skills(text_string, file):
-        all_skills = list()
-
-        with open(file,'r',encoding='utf-8') as input_file:
-            for line in input_file:
-                all_skills.append(line.strip().lower())
-        extractor = resumeparse.KeywordExtractor()
-
-        skills = [s for s in extractor.extract(str(text_string)) if s in all_skills]
-
+        matches = skillsmatcher(__nlp)
+        for match_id, start, end in matches:
+            span = __nlp[start:end]
+            skills.append(span.text)
+        skills = list(set(skills))
         return skills
+
 
     def read_file(file):
         # file = "/content/Asst Manager Trust Administration.docx"
@@ -722,11 +622,22 @@ class resumeparse(object):
         total_exp, text = resumeparse.get_experience(resume_segments)
         university = resumeparse.extract_university(full_text, os.path.join(base_path,'world-universities.csv'))
 
-        designition = resumeparse.job_designition(full_text, os.path.join(base_path,"titles_combined.txt"))
+        designition = resumeparse.job_designition(full_text)
         designition = list(dict.fromkeys(designition).keys())
 
         degree = resumeparse.get_degree(full_text)
-        skills = " ".join(resumeparse.extract_skills(full_text, os.path.join(base_path,"LINKEDIN_SKILLS_ORIGINAL.txt")))
+        
+        skills = ""
+
+        if len(resume_segments['skills'].keys()):
+            for key , values in resume_segments['skills'].items():
+              skills += re.sub(key, '', ",".join(values), flags=re.IGNORECASE)            
+            skills = skills.strip().strip(",").split(",")
+        
+        if len(skills) == 0:
+            skills = resumeparse.extract_skills(full_text)
+        skills = list(dict.fromkeys(skills).keys())
+        
         return {
             "email": email,
             "phone": phone,
@@ -737,4 +648,3 @@ class resumeparse(object):
             "degree": degree,
             "skills": skills
         }
-
