@@ -1,4 +1,4 @@
-# pyresparser
+# Resume parser
 
 ```
 A resume parser used for extracting information from resumes
@@ -26,7 +26,7 @@ Built with ❤︎ and :coffee: by  [Kumar Rajwani](https://github.com/kbrajwani)
 - You can install this package using
 
 ```bash
-pip install resume-parser==0.4
+pip install resume-parser
 ```
 
 - For NLP operations we use spacy and nltk. Install them using below commands:
@@ -60,17 +60,6 @@ from resume_parser import resumeparse
 data = resumeparse.read_file('/path/to/resume/file')
 ```
 
-# CLI
-
-For running the resume extractor you can also use the `cli` provided
-
-```bash
-
-```
-
-# Notes:
-
-- If you are running the app on windows, then you can only extract .docs and .pdf files
 
 # Result
 
