@@ -96,9 +96,8 @@ The module would return a dictionary with result as follows:
      'university': ['gujarat university', 'wuhan university', 'egerton university']}
 ```
 
-
-
-
+# References
+https://github.com/OmkarPathak/pyresparser/
 
 
 
