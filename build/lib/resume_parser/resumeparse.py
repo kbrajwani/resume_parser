@@ -603,9 +603,7 @@ class resumeparse(object):
             resume_lines, raw_text = resumeparse.convert_docx_to_txt(file)
         elif file.endswith('pdf'):
             resume_lines, raw_text = resumeparse.convert_pdf_to_txt(file)
-
         elif file.endswith('txt'):
-
             with open(file, 'r', encoding='latin') as f:
                 resume_lines = f.readlines()
 

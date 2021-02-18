@@ -1,4 +1,7 @@
 MANIFEST.in
+README.md
+README.rst
+setup.cfg
 setup.py
 resume_parser/LINKEDIN_SKILLS_ORIGINAL.txt
 resume_parser/__init__.py
