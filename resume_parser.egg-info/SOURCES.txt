@@ -17,6 +17,15 @@ resume_parser.egg-info/top_level.txt
 resume_parser/__pycache__/__init__.cpython-36.pyc
 resume_parser/__pycache__/resume.cpython-36.pyc
 resume_parser/__pycache__/resumeparse.cpython-36.pyc
+resume_parser/company_working/model/meta.json
+resume_parser/company_working/model/tokenizer
+resume_parser/company_working/model/ner/cfg
+resume_parser/company_working/model/ner/model
+resume_parser/company_working/model/ner/moves
+resume_parser/company_working/model/vocab/key2row
+resume_parser/company_working/model/vocab/lookups.bin
+resume_parser/company_working/model/vocab/strings.json
+resume_parser/company_working/model/vocab/vectors
 resume_parser/degree/model/meta.json
 resume_parser/degree/model/tokenizer
 resume_parser/degree/model/ner/cfg

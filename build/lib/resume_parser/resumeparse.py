@@ -48,6 +48,7 @@ base_path = os.path.dirname(__file__)
 
 nlp = spacy.load('en_core_web_sm')
 custom_nlp2 = spacy.load(os.path.join(base_path,"degree","model"))
+custom_nlp3 = spacy.load(os.path.join(base_path,"company_working","model"))
 
 # initialize matcher with a vocab
 matcher = Matcher(nlp.vocab)
@@ -580,6 +581,13 @@ class resumeparse(object):
 
         degree = [ent.text.replace("\n", " ") for ent in list(doc.ents) if ent.label_ == 'Degree']
         return list(dict.fromkeys(degree).keys())
+
+    def get_company_working(text):
+        doc = custom_nlp3(text)
+        degree = []
+
+        degree = [ent.text.replace("\n", " ") for ent in list(doc.ents)]
+        return list(dict.fromkeys(degree).keys())
     
     def extract_skills(text):
 
@@ -624,6 +632,7 @@ class resumeparse(object):
         designition = list(dict.fromkeys(designition).keys())
 
         degree = resumeparse.get_degree(full_text)
+        company_working = resumeparse.get_company_working(full_text)
         
         skills = ""
 
@@ -644,5 +653,6 @@ class resumeparse(object):
             "university": university,
             "designition": designition,
             "degree": degree,
-            "skills": skills
+            "skills": skills,
+            "Companies worked at": company_working
         }
