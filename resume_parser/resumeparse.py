@@ -1,3 +1,4 @@
+# %%writefile /content/resume_parser/resume_parser/resumeparse.py
 # !apt-get install python-dev libxml2-dev libxslt1-dev antiword unrtf poppler-resumeparse pstotext tesseract-ocr
 # !sudo apt-get install libenchant1c2a
 
@@ -43,7 +44,7 @@ import nltk
 from stemming.porter2 import stem
 
 # load pre-trained model
-base_path = os.path.dirname("__file__")
+base_path = os.path.dirname(__file__)
 
 
 nlp = spacy.load('en_core_web_sm')
@@ -417,8 +418,8 @@ class resumeparse(object):
         year = regex_year
         start_date = month + not_alpha_numeric + r"?" + year
         
-
-        end_date = r'((' + number + r'?' + not_alpha_numeric + r"?" + month + not_alpha_numeric + r"?" + year + r')|(present|current))'
+        end_date = r'((' + number + r'?' + not_alpha_numeric + r"?" + number + not_alpha_numeric + r"?" + year + r')|(present|current))'
+        # end_date = r'((' + number + r'?' + not_alpha_numeric + r"?" + month + not_alpha_numeric + r"?" + year + r')|(present|current))'
         longer_year = r"((20|19)(\d{2}))"
         year_range = longer_year + r"(" + not_alpha_numeric + r"{1,4}|(\s*to\s*))" + r'(' + longer_year + r'|(present|current))'
         date_range = r"(" + start_date + r"(" + not_alpha_numeric + r"{1,4}|(\s*to\s*))" + end_date + r")|(" + year_range + r")"
@@ -439,7 +440,7 @@ class resumeparse(object):
                 year_range_find = re.compile(year_range, re.IGNORECASE)
                 year_range_find = re.search(year_range_find, date_range)
                 # print("year_range_find",year_range_find.group())
-                # replace = re.compile(r"(" + not_alpha_numeric + r"{1,4}|(\s*to\s*))", re.IGNORECASE)
+                replace = re.compile(r"(" + not_alpha_numeric + r"{1,4}|(\s*to\s*))", re.IGNORECASE)
                 replace = re.compile(r"((\s*to\s*)|" + not_alpha_numeric + r"{1,4})", re.IGNORECASE)
                 replace = re.search(replace, year_range_find.group().strip())
                 # print(replace.group())
