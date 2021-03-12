@@ -43,7 +43,7 @@ import nltk
 from stemming.porter2 import stem
 
 # load pre-trained model
-base_path = os.path.dirname(__file__)
+base_path = os.path.dirname("__file__")
 
 
 nlp = spacy.load('en_core_web_sm')
@@ -193,7 +193,7 @@ class resumeparse(object):
     )
 
            
-    def convert_docx_to_txt(docx_file):
+    def convert_docx_to_txt(docx_file,docx_parser):
         """
             A utility function to convert a Microsoft docx files to raw text.
 
@@ -218,7 +218,13 @@ class resumeparse(object):
         #     resume_lines = [re.sub('\s+', ' ', line.strip()) for line in resume_lines if line.strip()]  # Remove empty strings and whitespaces
         #     return resume_lines
         try:
+          if docx_parser == "tika":
             text = parser.from_file(docx_file, service='text')['content']
+          elif docx_parser == "docx2txt":
+            text = docx2txt.process(docx_file)
+          else:
+            logging.error('Choose docx_parser from tika or docx2txt :: ' + str(e)+' is not supported')
+            return [], " "
         except RuntimeError as e:            
             logging.error('Error in tika installation:: ' + str(e))
             logging.error('--------------------------')
@@ -383,7 +389,8 @@ class resumeparse(object):
         # def get_month_index(month):
         #   month_dict = {'jan':1, 'feb':2, 'mar':3, 'apr':4, 'may':5, 'jun':6, 'jul':7, 'aug':8, 'sep':9, 'oct':10, 'nov':11, 'dec':12}
         #   return month_dict[month.lower()]
-
+        # print(resume_text)
+        # print("*"*100)
         def correct_year(result):
             if len(result) < 2:
                 if int(result) > int(str(date.today().year)[-2:]):
@@ -423,14 +430,23 @@ class resumeparse(object):
         
         while regex_result:
 
+          try:
             date_range = regex_result.group()
+            # print(date_range)
+            # print("*"*100)
             try:
+              
                 year_range_find = re.compile(year_range, re.IGNORECASE)
                 year_range_find = re.search(year_range_find, date_range)
-                replace = re.compile(r"(" + not_alpha_numeric + r"{1,4}|(\s*to\s*))", re.IGNORECASE)
+                # print("year_range_find",year_range_find.group())
+                # replace = re.compile(r"(" + not_alpha_numeric + r"{1,4}|(\s*to\s*))", re.IGNORECASE)
+                replace = re.compile(r"((\s*to\s*)|" + not_alpha_numeric + r"{1,4})", re.IGNORECASE)
                 replace = re.search(replace, year_range_find.group().strip())
-
+                # print(replace.group())
+                # print(year_range_find.group().strip().split(replace.group()))
                 start_year_result, end_year_result = year_range_find.group().strip().split(replace.group())
+                # print(start_year_result, end_year_result)
+                # print("*"*100)
                 start_year_result = int(correct_year(start_year_result))
                 if end_year_result.lower().find('present') != -1 or end_year_result.lower().find('current') != -1:
                     end_month = date.today().month  # current month
@@ -439,8 +455,8 @@ class resumeparse(object):
                     end_year_result = int(correct_year(end_year_result))
 
 
-            except:
-
+            except Exception as e:
+                logging.error(str(e))
                 start_date_find = re.compile(start_date, re.IGNORECASE)
                 start_date_find = re.search(start_date_find, date_range)
 
@@ -450,7 +466,7 @@ class resumeparse(object):
                 replace = re.compile(start_date + r"(" + not_alpha_numeric + r"{1,4}|(\s*to\s*))", re.IGNORECASE)
                 replace = re.search(replace, date_range)
                 date_range = date_range[replace.end():]
-
+        
                 start_year_result = start_date_find.group().strip().split(non_alpha_find.group())[-1]
 
                 # if len(start_year_result)<2:
@@ -476,7 +492,11 @@ class resumeparse(object):
                     #   else:
                     #     end_year_result = str(date.today().year)[:-2]+end_year_result
                     # end_year_result = int(end_year_result)
-                    end_year_result = int(correct_year(end_year_result))
+                    try:
+                      end_year_result = int(correct_year(end_year_result))
+                    except Exception as e:
+                      logging.error(str(e))
+                      end_year_result = int(re.search("\d+",correct_year(end_year_result)).group())
 
             if (start_year == -1) or (start_year_result <= start_year):
                 start_year = start_year_result
@@ -485,7 +505,11 @@ class resumeparse(object):
 
             resume_text = resume_text[regex_result.end():].strip()
             regex_result = re.search(regular_expression, resume_text)
-        
+          except Exception as e:
+            logging.error(str(e))
+            resume_text = resume_text[regex_result.end():].strip()
+            regex_result = re.search(regular_expression, resume_text)
+            
         return end_year - start_year  # Use the obtained month attribute
 
     # except Exception as exception_instance:
@@ -604,11 +628,18 @@ class resumeparse(object):
         return skills
 
 
-    def read_file(file):
+    def read_file(file,docx_parser = "tika"):
+        """
+        file : Give path of resume file
+        docx_parser : Enter docx2txt or tika, by default is tika
+        """
         # file = "/content/Asst Manager Trust Administration.docx"
         file = os.path.join(file)
         if file.endswith('docx') or file.endswith('doc'):
-            resume_lines, raw_text = resumeparse.convert_docx_to_txt(file)
+            if file.endswith('doc') and docx_parser == "docx2txt":
+              docx_parser = "tika"
+              logging.error("doc format not supported by the docx2txt changing back to tika")
+            resume_lines, raw_text = resumeparse.convert_docx_to_txt(file,docx_parser)
         elif file.endswith('pdf'):
             resume_lines, raw_text = resumeparse.convert_pdf_to_txt(file)
         elif file.endswith('txt'):

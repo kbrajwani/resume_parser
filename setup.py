@@ -6,7 +6,7 @@ here = path.abspath(path.dirname(__file__))
 setup(
   name = 'resume_parser',         # How you named your package folder (MyLib)
   packages = ['resume_parser'],   # Chose the same as "name"
-  version = '0.6',      # Start with a small number and increase it with every change you make
+  version = '0.8',      # Start with a small number and increase it with every change you make
   license='MIT',        # Chose a license from here: https://help.github.com/articles/licensing-a-repository
   description = 'A resume parser used for extracting information from resumes',   # Give a short description about your library
   author = 'kumar',                   # Type in your name
