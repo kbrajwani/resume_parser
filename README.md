@@ -29,6 +29,13 @@ Built with ❤︎ and :coffee: by  [Kumar Rajwani](https://github.com/kbrajwani)
 pip install resume-parser
 ```
 
+- Dependency of spacy
+
+```bash
+pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.3.1/en_core_web_sm-2.3.1.tar.gz
+pip install importlib-metadata==3.2.0
+```
+
 - For NLP operations we use spacy and nltk. Install them using below commands:
 
 ```bash
