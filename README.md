@@ -1,4 +1,5 @@
 # Resume parser
+Premium resume parsing services have been moved to [Resume-Parser](https://www.resume-parser.com/application/resumes). Please try the demo for free and give us your [feedback](https://www.resume-parser.com)
 
 ```
 A resume parser used for extracting information from resumes
@@ -103,11 +104,3 @@ The module would return a dictionary with result as follows:
      'total_exp': 3,
      'university': ['gujarat university', 'wuhan university', 'egerton university']}
 ```
-
-# References
-https://github.com/OmkarPathak/pyresparser/
-
-
-
-
-
