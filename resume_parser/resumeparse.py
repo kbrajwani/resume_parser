@@ -387,7 +387,7 @@ class resumeparse(object):
         return resume_segments
 
     def calculate_experience(resume_text):
-        print("calculate_experience")
+        
         #
         # def get_month_index(month):
         #   month_dict = {'jan':1, 'feb':2, 'mar':3, 'apr':4, 'may':5, 'jun':6, 'jul':7, 'aug':8, 'sep':9, 'oct':10, 'nov':11, 'dec':12}
@@ -463,7 +463,7 @@ class resumeparse(object):
 
 
             except Exception as e:
-                logging.error(str(e))
+                # logging.error(str(e))
                 start_date_find = re.compile(start_date, re.IGNORECASE)
                 start_date_find = re.search(start_date_find, date_range)
 
