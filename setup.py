@@ -22,7 +22,7 @@ setup(
             'numpy>=1.19.1',
             'pandas>=1.1.0',
             'pdfminer.six>=20200517',
-            'en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-2.3.1/en_core_web_sm-2.3.1.tar.gz',
+            'en_core_web_sm==2.3.1',
             'importlib-metadata==3.2.0',
             'pdfplumber>=0.5.23',
             'phonenumbers>=8.12.7',
