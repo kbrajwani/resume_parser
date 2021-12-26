@@ -76,15 +76,16 @@ class resumeparse(object):
         'objective',
         'career objective',
         'employment objective',
-        'professional objective',
-        'summary',
+        'professional objective',        
         'career summary',
         'professional summary',
         'summary of qualifications',
+        'summary',
         # 'digital'
     )
 
     work_and_employment = (
+        'career profile',
         'employment history',
         'work history',
         'work experience',
@@ -109,6 +110,7 @@ class resumeparse(object):
         'courses',
         'related courses',
         'education',
+        'qualifications',
         'educational background',
         'educational qualifications',
         'educational training',
@@ -128,7 +130,6 @@ class resumeparse(object):
 
     skills_header = (
         'credentials',
-        'qualifications',
         'areas of experience',
         'areas of expertise',
         'areas of knowledge',
@@ -386,6 +387,7 @@ class resumeparse(object):
         return resume_segments
 
     def calculate_experience(resume_text):
+        print("calculate_experience")
         #
         # def get_month_index(month):
         #   month_dict = {'jan':1, 'feb':2, 'mar':3, 'apr':4, 'may':5, 'jun':6, 'jul':7, 'aug':8, 'sep':9, 'oct':10, 'nov':11, 'dec':12}
@@ -418,10 +420,10 @@ class resumeparse(object):
         year = regex_year
         start_date = month + not_alpha_numeric + r"?" + year
         
-        end_date = r'((' + number + r'?' + not_alpha_numeric + r"?" + number + not_alpha_numeric + r"?" + year + r')|(present|current))'
-        # end_date = r'((' + number + r'?' + not_alpha_numeric + r"?" + month + not_alpha_numeric + r"?" + year + r')|(present|current))'
+        # end_date = r'((' + number + r'?' + not_alpha_numeric + r"?" + number + not_alpha_numeric + r"?" + year + r')|(present|current))'
+        end_date = r'((' + number + r'?' + not_alpha_numeric + r"?" + month + not_alpha_numeric + r"?" + year + r')|(present|current|till date|today))'
         longer_year = r"((20|19)(\d{2}))"
-        year_range = longer_year + r"(" + not_alpha_numeric + r"{1,4}|(\s*to\s*))" + r'(' + longer_year + r'|(present|current))'
+        year_range = longer_year + r"(" + not_alpha_numeric + r"{1,4}|(\s*to\s*))" + r'(' + longer_year + r'|(present|current|till date|today))'
         date_range = r"(" + start_date + r"(" + not_alpha_numeric + r"{1,4}|(\s*to\s*))" + end_date + r")|(" + year_range + r")"
 
         
@@ -430,7 +432,7 @@ class resumeparse(object):
         regex_result = re.search(regular_expression, resume_text)
         
         while regex_result:
-
+          
           try:
             date_range = regex_result.group()
             # print(date_range)
@@ -440,7 +442,8 @@ class resumeparse(object):
                 year_range_find = re.compile(year_range, re.IGNORECASE)
                 year_range_find = re.search(year_range_find, date_range)
                 # print("year_range_find",year_range_find.group())
-                replace = re.compile(r"(" + not_alpha_numeric + r"{1,4}|(\s*to\s*))", re.IGNORECASE)
+                                
+                # replace = re.compile(r"(" + not_alpha_numeric + r"{1,4}|(\s*to\s*))", re.IGNORECASE)
                 replace = re.compile(r"((\s*to\s*)|" + not_alpha_numeric + r"{1,4})", re.IGNORECASE)
                 replace = re.search(replace, year_range_find.group().strip())
                 # print(replace.group())
@@ -449,7 +452,10 @@ class resumeparse(object):
                 # print(start_year_result, end_year_result)
                 # print("*"*100)
                 start_year_result = int(correct_year(start_year_result))
-                if end_year_result.lower().find('present') != -1 or end_year_result.lower().find('current') != -1:
+                if (end_year_result.lower().find('present') != -1 or 
+                    end_year_result.lower().find('current') != -1 or 
+                    end_year_result.lower().find('till date') != -1 or 
+                    end_year_result.lower().find('today') != -1): 
                     end_month = date.today().month  # current month
                     end_year_result = date.today().year  # current year
                 else:

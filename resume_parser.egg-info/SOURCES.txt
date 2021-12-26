@@ -3,6 +3,7 @@ README.md
 README.rst
 setup.cfg
 setup.py
+resume_parser/ASHOK RESUME (1).pdf
 resume_parser/LINKEDIN_SKILLS_ORIGINAL.txt
 resume_parser/__init__.py
 resume_parser/resumeparse.py
