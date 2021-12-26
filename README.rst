@@ -105,3 +105,4 @@ The module would return a dictionary with result as follows:
          'total_exp': 3,
          'university': ['gujarat university', 'wuhan university', 'egerton university']}
 
+[![Buy me a coffee](https://www.payumoney.com/paybypayumoney/#/147695053B73CAB82672E715A52F9AA5)](Dragster.jpg)
