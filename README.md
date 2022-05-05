@@ -2,15 +2,11 @@ Resume parser
 =============
 Premium resume parsing services have been moved to [Resume-Parser](https://resume-parser.com/application/resumes). Please try the demo for free and give us your [feedback](https://resume-parser.com)
 
-Premium resume parsing services have been moved to `Resume-Parser <https://resume-parser.com/application/resumes>`__. 
-Please try the demo for free and give us your `feedback <https://resume-parser.com>`__
-::
 
     A resume parser used for extracting information from resumes
 
-Built with ❤︎ and :coffee: by `Kumar
-Rajwani <https://github.com/kbrajwani>`__ and `Brian
-Njoroge <https://github.com/Brianjoroge>`__
+Built with ❤︎ and :coffee: by [Kumar Rajwani](https://github.com/kbrajwani) and [Brian
+Njoroge](https://github.com/Brianjoroge)
 
 --------------
 
