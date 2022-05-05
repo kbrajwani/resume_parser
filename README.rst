@@ -1,10 +1,8 @@
 Resume parser
 =============
-Premium resume parsing services have been moved to [Resume-Parser](https://resume-parser.com/application/resumes). Please try the demo for free and give us your [feedback](https://resume-parser.com)
+Premium resume parsing services have been moved to `Resume-Parser <https://resume-parser.com/application/resumes>`_. Please try the demo for free and give us your `feedback <https://resume-parser.com>`_
 
-Premium resume parsing services have been moved to `Resume-Parser <https://resume-parser.com/application/resumes>`__. 
-Please try the demo for free and give us your `feedback <https://resume-parser.com>`__
-::
+
 
     A resume parser used for extracting information from resumes
 
