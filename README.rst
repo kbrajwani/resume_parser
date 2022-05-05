@@ -1,6 +1,6 @@
 Resume parser
 =============
-Premium resume parsing services have been moved to [Resume-Parser](https://resume-parser.com/application/resumes). Please try the demo for free and give us your [feedback](https://www.resume-parser.com)
+Premium resume parsing services have been moved to [Resume-Parser](https://resume-parser.com/application/resumes). Please try the demo for free and give us your [feedback](https://resume-parser.com)
 
 Premium resume parsing services have been moved to `Resume-Parser <https://resume-parser.com/application/resumes>`__. 
 Please try the demo for free and give us your `feedback <https://resume-parser.com>`__
