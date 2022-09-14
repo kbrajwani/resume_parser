@@ -3,7 +3,7 @@ import os
 import math
 from math import ceil
 import pdfplumber
-from layout_config import RESUME_HEADERS
+from .layout_config import RESUME_HEADERS
 from sentence_transformers import SentenceTransformer, util
 
 def fun_k(N: int):

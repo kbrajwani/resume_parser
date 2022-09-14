@@ -21,8 +21,8 @@ import nltk
 from stemming.porter2 import stem
 from fuzzywuzzy import fuzz
 
-from ResumeLayout import ResumeRecon
-from layout_config import RESUME_HEADERS
+from .ResumeLayout import ResumeRecon
+from .layout_config import RESUME_HEADERS
 
 from test import *
 # load pre-trained model
