@@ -1,5 +1,9 @@
 RESUME_HEADERS = {
-    'language':['language', 'languages', 'languages known', ],
+    'language':[
+        'language', 
+        'languages', 
+        'languages known', 
+        ],
     'objective':[
         'ABOUT',
         'Declaration',
@@ -15,17 +19,24 @@ RESUME_HEADERS = {
         'summary of qualifications',
         'summary',
         ],
-    'projects':['projects'],
-    'contact_info':['personal info', 'personal profile', ],
+    'projects':[
+        'projects',
+        'personal projects',
+
+        ],
+    'contact_info':[
+        'personal info', 
+        'personal profile',
+        ],
     'skills':[
         'skills and rating',
         'skills',
+        'key skills',
         'credentials',
         'areas of experience',
         'areas of expertise',
         'areas of knowledge',
         'skills',
-        "other skills",
         "other abilities",
         'career related skills',
         'professional skills',
@@ -59,8 +70,15 @@ RESUME_HEADERS = {
         'army experience',
         'military experience',
         'military background',
+        'organizations',
         ],
-    'certificate':['certificates', 'certifications'],
+    'certificate':[
+        'certificates', 
+        'certifications',
+        'misc',
+        'miscllaneous'
+        
+        ],
     'education_and_training':[
         'education',
         'education history',
@@ -87,7 +105,14 @@ RESUME_HEADERS = {
         'certifications',
         'special training',
     ],
-    'interests':['hobbies', 'interests'],
+    'interests':[
+        'hobbies', 
+        'interests',
+        'other skills',
+        'inter personal skills',
+        'inter-personal skills',
+        'interpersonal skills'
+        ],
     'awards':[
         'awards',
         'accomplishment',
