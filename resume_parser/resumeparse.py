@@ -1,24 +1,5 @@
-# %%writefile /content/resume_parser/resume_parser/resumeparse.py
-# !apt-get install python-dev libxml2-dev libxslt1-dev antiword unrtf poppler-resumeparse pstotext tesseract-ocr
-# !sudo apt-get install libenchant1c2a
-
-
-# !pip install tika
-# !pip install docx2txt
-# !pip install phonenumbers
-# !pip install pyenchant
-# !pip install stemming
-
 from __future__ import division
 import nltk
-
-# nltk.download('punkt')
-# nltk.download('averaged_perceptron_tagger')
-# nltk.download('universal_tagset')
-# nltk.download('maxent_ne_chunker')
-# nltk.download('stopwords')
-# nltk.download('wordnet')
-# nltk.download('brown')
 
 import re
 import os
@@ -32,22 +13,24 @@ import phonenumbers
 import pdfplumber
 
 import logging
-
 import spacy
 from spacy.matcher import Matcher
 from spacy.matcher import PhraseMatcher
 
-import sys
-import operator
-import string
 import nltk
 from stemming.porter2 import stem
+from fuzzywuzzy import fuzz
 
+from ResumeLayout import ResumeRecon
+from layout_config import RESUME_HEADERS
+
+from test import *
 # load pre-trained model
 base_path = os.path.dirname(__file__)
 
 
 nlp = spacy.load('en_core_web_sm')
+# custom_nlp2 = custom_nlp3 = nlp
 custom_nlp2 = spacy.load(os.path.join(base_path,"degree","model"))
 custom_nlp3 = spacy.load(os.path.join(base_path,"company_working","model"))
 
@@ -74,6 +57,7 @@ class resumeparse(object):
     objective = (
         'career goal',
         'objective',
+        'profile',
         'career objective',
         'employment objective',
         'professional objective',        
@@ -194,7 +178,7 @@ class resumeparse(object):
         'theses',
     )
 
-           
+
     def convert_docx_to_txt(docx_file,docx_parser):
         """
             A utility function to convert a Microsoft docx files to raw text.
@@ -301,89 +285,28 @@ class resumeparse(object):
             logging.error('Error in docx file:: ' + str(e))
             return [], " "
             
-    def find_segment_indices(string_to_search, resume_segments, resume_indices):
-        for i, line in enumerate(string_to_search):
+    def segment(res_segments):
+        resume_segments = {}
+        # resume_segments = dict.fromkeys(RESUME_HEADERS.keys(), [])
+        try:
+            for header_section, keywords in RESUME_HEADERS.items():
+                resume_segments[header_section] = resume_segments.get(header_section, [])
+                # objecttive, skills, work_and_employment
+                for _, header_segments in res_segments.items():
+                    # 0, {'SKILLS': [{word1}, {word2}]}
+                    for header, header_words in header_segments.items():
+                        # SKILLS, [{word1}, {word2}]}
+                        for keyword in keywords:
+                            # [carrier, goal, skills, projects ....]
+                            if fuzz.ratio(header.lower(), keyword.lower()) >= 90:
+                                resume_segments[header_section] = header_words
 
-            if line[0].islower():
-                continue
+            for segment in resume_segments:
+                if not resume_segments[segment] and segment in ['contact_info', 'objective']:
+                    resume_segments[segment] = header_segments['FREE_TEXT']
 
-            header = line.lower()
-
-            if [o for o in resumeparse.objective if header.startswith(o)]:
-                try:
-                    resume_segments['objective'][header]
-                except:
-                    resume_indices.append(i)
-                    header = [o for o in resumeparse.objective if header.startswith(o)][0]
-                    resume_segments['objective'][header] = i
-            elif [w for w in resumeparse.work_and_employment if header.startswith(w)]:
-                try:
-                    resume_segments['work_and_employment'][header]
-                except:
-                    resume_indices.append(i)
-                    header = [w for w in resumeparse.work_and_employment if header.startswith(w)][0]
-                    resume_segments['work_and_employment'][header] = i
-            elif [e for e in resumeparse.education_and_training if header.startswith(e)]:
-                try:
-                    resume_segments['education_and_training'][header]
-                except:
-                    resume_indices.append(i)
-                    header = [e for e in resumeparse.education_and_training if header.startswith(e)][0]
-                    resume_segments['education_and_training'][header] = i
-            elif [s for s in resumeparse.skills_header if header.startswith(s)]:
-                try:
-                    resume_segments['skills'][header]
-                except:
-                    resume_indices.append(i)
-                    header = [s for s in resumeparse.skills_header if header.startswith(s)][0]
-                    resume_segments['skills'][header] = i
-            elif [m for m in resumeparse.misc if header.startswith(m)]:
-                try:
-                    resume_segments['misc'][header]
-                except:
-                    resume_indices.append(i)
-                    header = [m for m in resumeparse.misc if header.startswith(m)][0]
-                    resume_segments['misc'][header] = i
-            elif [a for a in resumeparse.accomplishments if header.startswith(a)]:
-                try:
-                    resume_segments['accomplishments'][header]
-                except:
-                    resume_indices.append(i)
-                    header = [a for a in resumeparse.accomplishments if header.startswith(a)][0]
-                    resume_segments['accomplishments'][header] = i
-
-    def slice_segments(string_to_search, resume_segments, resume_indices):
-        resume_segments['contact_info'] = string_to_search[:resume_indices[0]]
-
-        for section, value in resume_segments.items():
-            if section == 'contact_info':
-                continue
-
-            for sub_section, start_idx in value.items():
-                end_idx = len(string_to_search)
-                if (resume_indices.index(start_idx) + 1) != len(resume_indices):
-                    end_idx = resume_indices[resume_indices.index(start_idx) + 1]
-
-                resume_segments[section][sub_section] = string_to_search[start_idx:end_idx]
-
-    def segment(string_to_search):
-        resume_segments = {
-            'objective': {},
-            'work_and_employment': {},
-            'education_and_training': {},
-            'skills': {},
-            'accomplishments': {},
-            'misc': {}
-        }
-
-        resume_indices = []
-
-        resumeparse.find_segment_indices(string_to_search, resume_segments, resume_indices)
-        if len(resume_indices) != 0:
-            resumeparse.slice_segments(string_to_search, resume_segments, resume_indices)
-        else:
-            resume_segments['contact_info'] = []
-
+        except Exception as e:
+            print("Exception :: segment :: ", str(e))
         return resume_segments
 
     def calculate_experience(resume_text):
@@ -519,27 +442,12 @@ class resumeparse(object):
             
         return end_year - start_year  # Use the obtained month attribute
 
-    # except Exception as exception_instance:
-    #   logging.error('Issue calculating experience: '+str(exception_instance))
-    #   return None
-
     def get_experience(resume_segments):
         total_exp = 0
-        if len(resume_segments['work_and_employment'].keys()):
+        if len(resume_segments['work_and_employment']):
             text = ""
-            for key, values in resume_segments['work_and_employment'].items():
-                text += " ".join(values) + " "
-            total_exp = resumeparse.calculate_experience(text)
-            return total_exp, text
-        else:
-            text = ""
-            for key in resume_segments.keys():
-                if key != 'education_and_training':
-                    if key == 'contact_info':
-                        text += " ".join(resume_segments[key]) + " "
-                    else:
-                        for key_inner, value in resume_segments[key].items():
-                            text += " ".join(value) + " "
+            for word in resume_segments['work_and_employment']:
+                text += word
             total_exp = resumeparse.calculate_experience(text)
             return total_exp, text
         return total_exp, " "
@@ -640,47 +548,48 @@ class resumeparse(object):
         file : Give path of resume file
         docx_parser : Enter docx2txt or tika, by default is tika
         """
-        # file = "/content/Asst Manager Trust Administration.docx"
+
         file = os.path.join(file)
-        if file.endswith('docx') or file.endswith('doc'):
-            if file.endswith('doc') and docx_parser == "docx2txt":
-              docx_parser = "tika"
-              logging.error("doc format not supported by the docx2txt changing back to tika")
-            resume_lines, raw_text = resumeparse.convert_docx_to_txt(file,docx_parser)
-        elif file.endswith('pdf'):
-            resume_lines, raw_text = resumeparse.convert_pdf_to_txt(file)
-        elif file.endswith('txt'):
-            with open(file, 'r', encoding='latin') as f:
-                resume_lines = f.readlines()
 
-        else:
-            resume_lines = None
-        resume_segments = resumeparse.segment(resume_lines)
+        resume = ResumeRecon(file)
         
-        
-        full_text = " ".join(resume_lines)
+        doc_headers, sections, res_segments = resume.process_resume()
+        resume_lines = []
+        for page, cols in sections.items():
+            for _, col in cols.items():
+                resume_lines += [i['text'] for i in col]
 
-        email = resumeparse.extract_email(full_text)
-        phone = resumeparse.find_phone(full_text)
+        resume_segments = resumeparse.segment(res_segments)
+
+        resume_segments = {key: [i['text'] for i in segment] for key, segment in resume_segments.items()}        
+
+        email = resumeparse.extract_email(' '.join(resume_segments['contact_info']))
+
+        phone = resumeparse.find_phone(' '.join(resume_segments['contact_info']))
+
         name = resumeparse.extract_name(" ".join(resume_segments['contact_info']))
+
         total_exp, text = resumeparse.get_experience(resume_segments)
-        university = resumeparse.extract_university(full_text, os.path.join(base_path,'world-universities.csv'))
 
-        designition = resumeparse.job_designition(full_text)
-        designition = list(dict.fromkeys(designition).keys())
+        university = resumeparse.extract_university(' '.join(resume_segments['education_and_training']), os.path.join(base_path,'world-universities.csv'))
 
-        degree = resumeparse.get_degree(full_text)
-        company_working = resumeparse.get_company_working(full_text)
+        # designition = resumeparse.job_designition(' '.join(resume_segments['work_and_employment']))
+
+        # # designition = list(dict.fromkeys(designition).keys())
+
+        # degree = resumeparse.get_degree(' '.join(resume_segments['education_and_training']))
+
+        # company_working = resumeparse.get_company_working(' '.join(resume_segments['work_and_employment']))
         
         skills = ""
 
-        if len(resume_segments['skills'].keys()):
-            for key , values in resume_segments['skills'].items():
-              skills += re.sub(key, '', ",".join(values), flags=re.IGNORECASE)            
-            skills = skills.strip().strip(",").split(",")
+        # # if len(resume_segments['skills'].keys()):
+        # #     for key , values in resume_segments['skills'].items():
+        # #       skills += re.sub(key, '', ",".join(values), flags=re.IGNORECASE)            
+        # #     skills = skills.strip().strip(",").split(",")
         
-        if len(skills) == 0:
-            skills = resumeparse.extract_skills(full_text)
+        if len(skills) == 0 and resume_segments['skills']:
+            skills = resumeparse.extract_skills(' '.join(resume_segments['skills']))
         skills = list(dict.fromkeys(skills).keys())
         
         return {
@@ -689,8 +598,16 @@ class resumeparse(object):
             "name": name,
             "total_exp": total_exp,
             "university": university,
-            "designition": designition,
-            "degree": degree,
+            # "designition": designition,
+            "languages": resume_segments['language'],
+            "interests": resume_segments['interests'],
+            "education": resume_segments['education_and_training'],
             "skills": skills,
-            "Companies worked at": company_working
+            "experience": resume_segments['work_and_employment']
         }
+
+
+if __name__ == "__main__":
+    file = "/home/aman/projects/resume/tests/samples/Saurav's Resume(2).pdf"
+    data = resumeparse.read_file(file)
+    print(data)
