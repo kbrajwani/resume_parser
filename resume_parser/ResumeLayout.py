@@ -371,17 +371,17 @@ class ResumeRecon:
                             try:
                                 if word in self.formed_headers[page]:
                                     header = word['text']
-                                    self.segments[page][header] = [word]
+                                    self.segments[page][header] = []
                                     continue
                             
                                 elif gram_words[page].get(2, data)[idx] in self.formed_headers[page]:
                                     header = gram_words[page].get(2, data)[idx]['text']
-                                    self.segments[page][header] = [word]
+                                    self.segments[page][header] = []
                                     continue
 
                                 elif gram_words[page].get(3, data)[idx] in self.formed_headers[page]:
                                     header = gram_words[page].get(3, data)[idx]['text']
-                                    self.segments[page][header] = [word]
+                                    self.segments[page][header] = []
                                     continue
                             except Exception as e:
                                 print("INDISE ::  EXCEPTION :: ", str(e))
