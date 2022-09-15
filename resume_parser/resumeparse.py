@@ -21,8 +21,8 @@ import nltk
 from stemming.porter2 import stem
 from fuzzywuzzy import fuzz
 
-from .ResumeLayout import ResumeRecon
-from .layout_config import RESUME_HEADERS
+from ResumeLayout import ResumeRecon, form_sentences
+from layout_config import RESUME_HEADERS
 
 from test import *
 # load pre-trained model
@@ -542,7 +542,6 @@ class resumeparse(object):
         skills = list(set(skills))
         return skills
 
-
     def read_file(file,docx_parser = "tika"):
         """
         file : Give path of resume file
@@ -561,7 +560,7 @@ class resumeparse(object):
 
         resume_segments = resumeparse.segment(res_segments)
 
-        resume_segments = {key: [i['text'] for i in segment] for key, segment in resume_segments.items()}        
+        resume_segments = {key: [i['text'] for i in form_sentences(segment)] for key, segment in resume_segments.items()}
 
         email = resumeparse.extract_email(' '.join(resume_segments['contact_info']))
 
@@ -608,6 +607,6 @@ class resumeparse(object):
 
 
 if __name__ == "__main__":
-    file = "/home/aman/projects/resume/tests/samples/Saurav's Resume(2).pdf"
+    file = "/home/aman/projects/resume/tests/samples/RakshitResume.pdf"
     data = resumeparse.read_file(file)
     print(data)

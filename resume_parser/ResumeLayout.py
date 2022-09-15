@@ -1,9 +1,8 @@
-from bdb import Breakpoint
 import os
 import math
 from math import ceil
 import pdfplumber
-from .layout_config import RESUME_HEADERS
+from layout_config import RESUME_HEADERS
 from sentence_transformers import SentenceTransformer, util
 
 def fun_k(N: int):
@@ -74,6 +73,70 @@ def reformed_lines_dict_data(all_words_in_coords) -> dict:
     except Exception as e:
         print(f"reformed_lines_dict_data :: Exception :: {e}")
     return lines
+
+def form_sentences(lines_list):
+    lines_dict = reformed_lines_dict_data(lines_list)
+    formed_line = []
+    top_list = [i for i in lines_dict]
+    top_diff = []
+
+    if len(top_list)>1:
+        for i in range(len(top_list)-1):
+            top_diff.append(top_list[i+1] - top_list[i])
+
+        avg_height_diff = sum(top_diff)/len(top_diff)
+    else:
+        avg_height_diff = 1
+ 
+    def concat_or_not(line, avg):
+        lines = []
+        try:
+            for idx in range(0, len(line)-1, 2):
+                if line[idx+1]['x0']-line[idx]['x1'] <= avg:
+                    new_line = {'text': line[idx]['text']+" "+line[idx+1]['text'], 'x0':line[idx]['x0'], 'x1':line[idx+1]['x1'],  'top':line[idx]['top'], 'doctop':line[idx]['doctop'], 'bottom':line[idx+1]['bottom'], 'upright':line[idx+1]['upright'], 'direction':line[idx]['direction']}
+                    lines.append(new_line)
+                else:
+                    if line[idx] not in lines:
+                        lines.append(line[idx])
+                    try:
+                        if idx < len(line) and line[idx+1] not in lines:
+                            lines.append(line[idx+1])
+                    except Exception as e:
+                        pass
+            
+            if len(line)%2 != 0:
+                lines.append(line[-1])
+
+        except Exception as e:
+            print("concat_or_not :: Exception :: ", str(e))
+
+        if not lines: lines = line
+        return lines
+
+    for _, line in lines_dict.items():
+        if len(line) <= 2 and line:
+            if len(line)<=1:
+                formed_line.extend(line)
+            else:
+                half_avg = sum([ceil(line[0]['x1'] - line[0]['x0'])//2, ceil(line[-1]['x1']-line[-1]['x0'])//2])/2
+                if line[-1]['x0'] - line[0]['x1'] <= half_avg:
+                    formed_line.extend([{'text': line[0]['text']+" "+line[-1]['text'], 'x0':line[0]['x0'], 'x1':line[-1]['x1'],  'top':line[0]['top'], 'doctop':line[0]['doctop'], 'bottom':line[-1]['bottom'], 'upright':line[-1]['upright'], 'direction':line[0]['direction']}])
+                else:
+                    formed_line.extend(line)
+
+        else:
+            avg_diff_list = [ceil(line[idx]['x1'] - line[idx]['x0'])//2 for idx in range(len(line)-1)]
+            avg = ceil(sum(avg_diff_list)/len(avg_diff_list))
+            new_line = []
+            while True:
+                new_line = concat_or_not(line, avg)
+                if line == new_line:
+                    break
+                line = new_line
+
+            formed_line.extend(new_line)
+    
+    return formed_line
 
 class ResumeRecon:
     
@@ -245,7 +308,7 @@ class ResumeRecon:
             word_list = formed_word
             x+=1
         
-        print([i["text"] for i in word_list])
+        # print([i["text"] for i in word_list])
         return word_list
 
     def get_possible_header_words(self):
@@ -384,16 +447,14 @@ class ResumeRecon:
                                     self.segments[page][header] = []
                                     continue
                             except Exception as e:
-                                print("INDISE ::  EXCEPTION :: ", str(e))
-                                breakpoint()
+                                print("segment_header_words ::  EXCEPTION :: ", str(e))
                         else:
                             if isinstance(self.segments[page].get(header, None), list):
                                 self.segments[page][header].append(word)
                             else:
                                 no_segment_words.append(word)
                 except Exception as e:
-                    print("OUUUTTTT ::  EXCEPTION :: ", str(e))
-                    breakpoint()
+                    print("segment_header_words ::  EXCEPTION :: ", str(e))
             self.segments[page]['FREE_TEXT'] = no_segment_words
 
     def process_resume(self):

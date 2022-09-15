@@ -69,8 +69,7 @@ RESUME_HEADERS = {
         'freelance experience',
         'army experience',
         'military experience',
-        'military background',
-        'organizations',
+        'military background'
         ],
     'certificate':[
         'certificates', 
