@@ -558,6 +558,7 @@ class resumeparse(object):
             for _, col in cols.items():
                 resume_lines += [i['text'] for i in col]
 
+        print(resume.header_tags)
         resume_segments = resumeparse.segment(res_segments)
 
         resume_segments = {key: [i['text'] for i in form_sentences(segment)] for key, segment in resume_segments.items()}
@@ -576,7 +577,7 @@ class resumeparse(object):
 
         # # designition = list(dict.fromkeys(designition).keys())
 
-        # degree = resumeparse.get_degree(' '.join(resume_segments['education_and_training']))
+        degree = resumeparse.get_degree(' '.join(resume_segments['education_and_training']))
 
         # company_working = resumeparse.get_company_working(' '.join(resume_segments['work_and_employment']))
         
@@ -597,7 +598,10 @@ class resumeparse(object):
             "name": name,
             "total_exp": total_exp,
             "university": university,
+            "certificate": resume_segments['certificate'],
+            # "degree": degree,
             # "designition": designition,
+            'projects': resume_segments['projects'],
             "languages": resume_segments['language'],
             "interests": resume_segments['interests'],
             "education": resume_segments['education_and_training'],
