@@ -1,6 +1,6 @@
 import os
 import math
-from math import ceil
+from math import ceil, floor
 import pdfplumber
 from layout_config import RESUME_HEADERS
 from sentence_transformers import SentenceTransformer, util
@@ -74,44 +74,65 @@ def reformed_lines_dict_data(all_words_in_coords) -> dict:
         print(f"reformed_lines_dict_data :: Exception :: {e}")
     return lines
 
+def words_concat_or_not(line, avg):
+    lines = []
+    try:
+        for idx in range(0, len(line)-1, 2):
+            if line[idx+1]['x0']-line[idx]['x1'] <= avg:
+                new_line = {'text': line[idx]['text']+" "+line[idx+1]['text'], 'x0':line[idx]['x0'], 'x1':line[idx+1]['x1'],  'top':line[idx]['top'], 'doctop':line[idx]['doctop'], 'bottom':line[idx+1]['bottom'], 'upright':line[idx+1]['upright'], 'direction':line[idx]['direction']}
+                lines.append(new_line)
+            else:
+                if line[idx] not in lines:
+                    lines.append(line[idx])
+                try:
+                    if idx < len(line) and line[idx+1] not in lines:
+                        lines.append(line[idx+1])
+                except Exception as e:
+                    pass
+        
+        if len(line)%2 != 0:
+            lines.append(line[-1])
+
+    except Exception as e:
+        print("concat_or_not :: Exception :: ", str(e))
+
+    if not lines: lines = line
+    return lines
+
+def lines_concat_or_not(lines_list, avg_height_diff):
+    formed_sentence = []
+    processed = []
+    for line_idx in range(0, len(lines_list)-1):
+        if line_idx in processed: continue
+        try:
+            if (lines_list[line_idx+1]['top']-lines_list[line_idx]['bottom']) <= avg_height_diff:
+                new_sentence = {'text': lines_list[line_idx]['text']+", "+lines_list[line_idx+1]['text'],'x0': lines_list[line_idx]['x0'],'top':lines_list[line_idx]['top'],'x1': lines_list[line_idx+1]['x1'],'doctop':lines_list[line_idx]['doctop'],'bottom': lines_list[line_idx+1]['bottom'],'upright':lines_list[line_idx+1]['upright'],'direction': lines_list[line_idx]['direction']}
+
+                formed_sentence.append(new_sentence)
+                processed.append(line_idx+1)
+            else:
+                if lines_list[line_idx] not in formed_sentence:
+                    formed_sentence.append(lines_list[line_idx])
+                try:
+                    if line_idx < len(lines_list) and lines_list[line_idx+1] not in formed_sentence:
+                        formed_sentence.append(lines_list[line_idx+1])
+                        processed.append(line_idx+1)
+                except Exception as e:
+                    pass
+        except Exception as e:
+            print(e)
+
+    if len(lines_list)%2 != 0:
+        formed_sentence.append(lines_list[-1])
+
+    if not formed_sentence: formed_sentence = lines_list
+    
+    return formed_sentence
+
 def form_sentences(lines_list):
     lines_dict = reformed_lines_dict_data(lines_list)
     formed_line = []
-    top_list = [i for i in lines_dict]
-    top_diff = []
-
-    if len(top_list)>1:
-        for i in range(len(top_list)-1):
-            top_diff.append(top_list[i+1] - top_list[i])
-
-        avg_height_diff = sum(top_diff)/len(top_diff)
-    else:
-        avg_height_diff = 1
- 
-    def concat_or_not(line, avg):
-        lines = []
-        try:
-            for idx in range(0, len(line)-1, 2):
-                if line[idx+1]['x0']-line[idx]['x1'] <= avg:
-                    new_line = {'text': line[idx]['text']+" "+line[idx+1]['text'], 'x0':line[idx]['x0'], 'x1':line[idx+1]['x1'],  'top':line[idx]['top'], 'doctop':line[idx]['doctop'], 'bottom':line[idx+1]['bottom'], 'upright':line[idx+1]['upright'], 'direction':line[idx]['direction']}
-                    lines.append(new_line)
-                else:
-                    if line[idx] not in lines:
-                        lines.append(line[idx])
-                    try:
-                        if idx < len(line) and line[idx+1] not in lines:
-                            lines.append(line[idx+1])
-                    except Exception as e:
-                        pass
-            
-            if len(line)%2 != 0:
-                lines.append(line[-1])
-
-        except Exception as e:
-            print("concat_or_not :: Exception :: ", str(e))
-
-        if not lines: lines = line
-        return lines
+    formed_sentences = []
 
     for _, line in lines_dict.items():
         if len(line) <= 2 and line:
@@ -123,20 +144,33 @@ def form_sentences(lines_list):
                     formed_line.extend([{'text': line[0]['text']+" "+line[-1]['text'], 'x0':line[0]['x0'], 'x1':line[-1]['x1'],  'top':line[0]['top'], 'doctop':line[0]['doctop'], 'bottom':line[-1]['bottom'], 'upright':line[-1]['upright'], 'direction':line[0]['direction']}])
                 else:
                     formed_line.extend(line)
-
         else:
             avg_diff_list = [ceil(line[idx]['x1'] - line[idx]['x0'])//2 for idx in range(len(line)-1)]
             avg = ceil(sum(avg_diff_list)/len(avg_diff_list))
             new_line = []
             while True:
-                new_line = concat_or_not(line, avg)
+                new_line = words_concat_or_not(line, avg)
                 if line == new_line:
                     break
                 line = new_line
 
             formed_line.extend(new_line)
     
-    return formed_line
+    line_diff_list = [formed_line[idx+1]['top']-formed_line[idx]['bottom'] for idx in range(len(formed_line)-1)]
+    if len(line_diff_list):
+        avg_height_diff = floor(sum(line_diff_list)/len(line_diff_list))
+
+    else: avg_height_diff = 1
+
+    formed_sentences = []
+
+    while True:
+        formed_sentences = lines_concat_or_not(formed_line, avg_height_diff)
+        if formed_line == formed_sentences:
+            break
+        formed_line = formed_sentences
+
+    return formed_sentences
 
 class ResumeRecon:
     
