@@ -190,6 +190,7 @@ class ResumeRecon:
         self.words = {}
         self.formed_headers = {}
         self.tables = {}
+        self.tables_text = {}
         self.document = path
         self.get_basic_data()
 
@@ -202,8 +203,9 @@ class ResumeRecon:
             for idx, page in enumerate(pages):
                 self.pages_shape[idx] = {'width': page.width, 'height': page.height}
                 self.chars[idx] = page.chars
-                self.words[idx] = page.extract_words()
+                self.words[idx] = page.extract_words(use_text_flow=True, extra_attrs=['size', 'fontname'])
                 self.tables[idx] = page.extract_tables()
+                self.tables_text[idx] = page.extract_text()
 
     def get_bold_letters(self):
         self.bold_letters = {}
@@ -259,7 +261,7 @@ class ResumeRecon:
             if len(total_classes) > 1:
                 k = fun_k(sum(total_classes))
                 intervals = (max(heights)-min(heights))/k
-                
+                # breakpoint()
                 # seggregate into heading tags (h1, h2, h3)
                 tag_heights = {}
                 tmp_heights = sorted(heights)
@@ -286,7 +288,7 @@ class ResumeRecon:
                 for height in heights:
                     words += [i for i in self.height_data[page][str(height)]]
                 
-                page_words[height_tag] = words
+                page_words[height_tag] = words 
             
             self.word_tags[page] = page_words
 
@@ -312,6 +314,7 @@ class ResumeRecon:
 
         for page, words_list in self.headers.items():
             formed_word_list = form_sentences(words_list)[1]
+            # [i['text'] for i in formed_word_list]
             self.formed_headers[page] = formed_word_list
 
     def seggregate_columns(self):
@@ -406,16 +409,19 @@ class ResumeRecon:
 
             no_segment_words = []
             for div, data in section.items():
+                data = sorted(data, key=lambda x: (x['top'], x['x0']))
                 # GENERATE NGRAM WORDS based on header lengths 
                 for header_x in page_headers:
                     if len(header_x.split())>1:
                         n_gram_words = generate_ngrams(data, len(header_x.split()))
+                        n_gram_words = sorted(n_gram_words, key=lambda x:(x['top'], x['x0']))
                         gram_words[page][len(header_x.split())] = n_gram_words
+
                 
                 # segment words based on header match
                 header = None
                 try:
-                    for idx, word in enumerate(data):
+                    for idx, word in enumerate(sorted(data, key=lambda x:(x['top'], x['x0']))):
                         if word in self.formed_headers[page] or \
                             gram_words[page].get(2, data)[idx] in self.formed_headers[page] or \
                                 gram_words[page].get(3, data)[idx] in self.formed_headers[page]:
@@ -451,5 +457,4 @@ class ResumeRecon:
         self.get_possible_header_words()
         self.seggregate_columns()
         self.segment_header_words()
-        return (self.headers, self.columns, self.segments)
-       
+        return self.headers, self.columns, self.segments
