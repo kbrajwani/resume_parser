@@ -105,7 +105,7 @@ def lines_concat_or_not(lines_list, avg_height_diff):
     for line_idx in range(0, len(lines_list)-1):
         if line_idx in processed: continue
         try:
-            if (lines_list[line_idx+1]['top']-lines_list[line_idx]['bottom']) <= avg_height_diff:
+            if  0 < (lines_list[line_idx+1]['top']-lines_list[line_idx]['bottom']) <= avg_height_diff and lines_list[line_idx]['x0']<lines_list[line_idx+1]['x1']:
                 new_sentence = {'text': lines_list[line_idx]['text']+", "+lines_list[line_idx+1]['text'],'x0': lines_list[line_idx]['x0'],'top':lines_list[line_idx]['top'],'x1': lines_list[line_idx+1]['x1'],'doctop':lines_list[line_idx]['doctop'],'bottom': lines_list[line_idx+1]['bottom'],'upright':lines_list[line_idx+1]['upright'],'direction': lines_list[line_idx]['direction']}
 
                 formed_sentence.append(new_sentence)
@@ -120,7 +120,7 @@ def lines_concat_or_not(lines_list, avg_height_diff):
                 except Exception as e:
                     pass
         except Exception as e:
-            print(e)
+            print("lines_concat_or_not :: Exception :: ", str(e))
 
     if len(lines_list)%2 != 0:
         formed_sentence.append(lines_list[-1])
@@ -163,14 +163,14 @@ def form_sentences(lines_list):
     else: avg_height_diff = 1
 
     formed_sentences = []
-
+    lines = formed_line.copy()
     while True:
         formed_sentences = lines_concat_or_not(formed_line, avg_height_diff)
         if formed_line == formed_sentences:
             break
         formed_line = formed_sentences
 
-    return formed_sentences
+    return lines, formed_sentences
 
 class ResumeRecon:
     
@@ -289,61 +289,6 @@ class ResumeRecon:
                 page_words[height_tag] = words
             
             self.word_tags[page] = page_words
-    
-    def form_words(self, word_list):
-        
-        x=0
-        word_list_length = len(word_list)
-        make_word = True
-
-        while make_word:
-            formed_word = []
-
-            if x>=word_list_length:
-                make_word = False
-    
-            while word_list:
-                new_word = []
-                word_list = sorted(word_list, key=lambda x: (x['top'],x['x0']))
-
-                word_left = word_list[0].get('x0')
-                word_right = word_list[0].get('x1')
-                word_top = word_list[0].get('top')
-                word_bottom = word_list[0].get('bottom')
-
-                word_height = word_bottom-word_top
-                word_width = word_right-word_left
-
-                new_word.append(word_list[0])
-                word_list.remove(word_list[0])
-
-                for word in word_list:
-                    word_list = sorted(word_list, key=lambda x: (x['top'],x['x0']))
-                    cword_left = word.get('x0')
-                    cword_right = word.get('x1')
-                    cword_top = word.get('top')
-
-                    if cword_left<=word_right+(word_width/4) and cword_top<=word_bottom+(word_height*1.5) and cword_right>word_left:
-                        new_word.append(word)
-                        word_list.remove(word)
-
-                if new_word:
-                    formed_word.append({
-                            'text': ' '.join([i['text'] for i in sorted(new_word, key=lambda x: (x['top'], x['x0']))]),
-                            'x0':  min([i['x0'] for i in new_word]),
-                            'x1': max([i['x1'] for i in new_word]),
-                            'top': min([i['top'] for i in new_word]),
-                            'doctop': min([i['doctop'] for i in new_word]),
-                            'bottom': max([i['bottom'] for i in new_word]),
-                            'upright': True,
-                            'direction': new_word[0]['direction']
-                        })
-            
-            word_list = formed_word
-            x+=1
-        
-        # print([i["text"] for i in word_list])
-        return word_list
 
     def get_possible_header_words(self):
         identified_header = 0
@@ -366,7 +311,7 @@ class ResumeRecon:
             print("get_possible_header_words :: Exception :: ", str(e))
 
         for page, words_list in self.headers.items():
-            formed_word_list = self.form_words(words_list)
+            formed_word_list = form_sentences(words_list)[1]
             self.formed_headers[page] = formed_word_list
 
     def seggregate_columns(self):

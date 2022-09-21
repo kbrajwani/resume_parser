@@ -1,9 +1,9 @@
-from __future__ import division
 import nltk
 
 import re
 import os
 from datetime import date
+from fuzzywuzzy import process
 
 import nltk
 import docx2txt
@@ -53,131 +53,6 @@ skillsmatcher.add("Job title", None, *patterns)
 
 
 class resumeparse(object):
-
-    objective = (
-        'career goal',
-        'objective',
-        'profile',
-        'career objective',
-        'employment objective',
-        'professional objective',        
-        'career summary',
-        'professional summary',
-        'summary of qualifications',
-        'summary',
-        # 'digital'
-    )
-
-    work_and_employment = (
-        'career profile',
-        'employment history',
-        'work history',
-        'work experience',
-        'experience',
-        'professional experience',
-        'professional background',
-        'additional experience',
-        'career related experience',
-        'related experience',
-        'programming experience',
-        'freelance',
-        'freelance experience',
-        'army experience',
-        'military experience',
-        'military background',
-    )
-
-    education_and_training = (
-        'academic background',
-        'academic experience',
-        'programs',
-        'courses',
-        'related courses',
-        'education',
-        'qualifications',
-        'educational background',
-        'educational qualifications',
-        'educational training',
-        'education and training',
-        'training',
-        'academic training',
-        'professional training',
-        'course project experience',
-        'related course projects',
-        'internship experience',
-        'internships',
-        'apprenticeships',
-        'college activities',
-        'certifications',
-        'special training',
-    )
-
-    skills_header = (
-        'credentials',
-        'areas of experience',
-        'areas of expertise',
-        'areas of knowledge',
-        'skills',
-        "other skills",
-        "other abilities",
-        'career related skills',
-        'professional skills',
-        'specialized skills',
-        'technical skills',
-        'computer skills',
-        'personal skills',
-        'computer knowledge',        
-        'technologies',
-        'technical experience',
-        'proficiencies',
-        'languages',
-        'language competencies and skills',
-        'programming languages',
-        'competencies'
-    )
-
-    misc = (
-        'activities and honors',
-        'activities',
-        'affiliations',
-        'professional affiliations',
-        'associations',
-        'professional associations',
-        'memberships',
-        'professional memberships',
-        'athletic involvement',
-        'community involvement',
-        'refere',
-        'civic activities',
-        'extra-Curricular activities',
-        'professional activities',
-        'volunteer work',
-        'volunteer experience',
-        'additional information',
-        'interests'
-    )
-
-    accomplishments = (
-        'achievement',
-        'licenses',
-        'presentations',
-        'conference presentations',
-        'conventions',
-        'dissertations',
-        'exhibits',
-        'papers',
-        'publications',
-        'professional publications',
-        'research',
-        'research grants',
-        'project',
-        'research projects',
-        'personal projects',
-        'current research interests',
-        'thesis',
-        'theses',
-    )
-
 
     def convert_docx_to_txt(docx_file,docx_parser):
         """
@@ -446,7 +321,7 @@ class resumeparse(object):
         total_exp = 0
         if len(resume_segments['work_and_employment']):
             text = ""
-            for word in resume_segments['work_and_employment']:
+            for word in resume_segments['work_and_employment']['sentences']:
                 text += word
             total_exp = resumeparse.calculate_experience(text)
             return total_exp, text
@@ -515,11 +390,10 @@ class resumeparse(object):
         return job_titles
 
     def get_degree(text):
-        doc = custom_nlp2(text)
-        degree = []
-
-        degree = [ent.text.replace("\n", " ") for ent in list(doc.ents) if ent.label_ == 'Degree']
-        return list(dict.fromkeys(degree).keys())
+        degree_df = pd.read_csv('degree.csv')
+        extracted = process.extractOne(text, degree_df['degree'].to_list(), scorer=fuzz.ratio)
+        if extracted[1]>95:
+            return extracted[0]
 
     def get_company_working(text):
         doc = custom_nlp3(text)
@@ -558,55 +432,41 @@ class resumeparse(object):
             for _, col in cols.items():
                 resume_lines += [i['text'] for i in col]
 
-        print(resume.header_tags)
         resume_segments = resumeparse.segment(res_segments)
+        for key, segment in resume_segments.items():
+            lines, sentences = form_sentences(segment)
+            resume_segments.update({key: {'lines': [i['text'] for i in lines], 'sentences': [i['text'] for i in sentences]}})
 
-        resume_segments = {key: [i['text'] for i in form_sentences(segment)] for key, segment in resume_segments.items()}
+        email = resumeparse.extract_email(' '.join(resume_segments['contact_info']['lines']))
 
-        email = resumeparse.extract_email(' '.join(resume_segments['contact_info']))
+        phone = resumeparse.find_phone(' '.join(resume_segments['contact_info']['lines']))
 
-        phone = resumeparse.find_phone(' '.join(resume_segments['contact_info']))
-
-        name = resumeparse.extract_name(" ".join(resume_segments['contact_info']))
+        name = resumeparse.extract_name(" ".join(resume_segments['contact_info']['lines']))
 
         total_exp, text = resumeparse.get_experience(resume_segments)
 
-        university = resumeparse.extract_university(' '.join(resume_segments['education_and_training']), os.path.join(base_path,'world-universities.csv'))
+        university = resumeparse.extract_university(' '.join(resume_segments['education_and_training']['lines']), os.path.join(base_path,'world-universities.csv'))
 
-        # designition = resumeparse.job_designition(' '.join(resume_segments['work_and_employment']))
-
-        # # designition = list(dict.fromkeys(designition).keys())
-
-        degree = resumeparse.get_degree(' '.join(resume_segments['education_and_training']))
-
-        # company_working = resumeparse.get_company_working(' '.join(resume_segments['work_and_employment']))
-        
         skills = ""
 
-        # # if len(resume_segments['skills'].keys()):
-        # #     for key , values in resume_segments['skills'].items():
-        # #       skills += re.sub(key, '', ",".join(values), flags=re.IGNORECASE)            
-        # #     skills = skills.strip().strip(",").split(",")
         
         if len(skills) == 0 and resume_segments['skills']:
-            skills = resumeparse.extract_skills(' '.join(resume_segments['skills']))
+            skills = resumeparse.extract_skills(' '.join(resume_segments['skills']['sentences']))
         skills = list(dict.fromkeys(skills).keys())
-        
+
         return {
             "email": email,
             "phone": phone,
             "name": name,
             "total_exp": total_exp,
             "university": university,
-            "certificate": resume_segments['certificate'],
-            # "degree": degree,
-            # "designition": designition,
-            'projects': resume_segments['projects'],
-            "languages": resume_segments['language'],
-            "interests": resume_segments['interests'],
-            "education": resume_segments['education_and_training'],
+            "certificate": resume_segments['certificate']['sentences'],
+            'projects': resume_segments['projects']['sentences'],
+            "languages": resume_segments['language']['lines'],
+            "interests": resume_segments['interests']['sentences'],
+            "education": resume_segments['education_and_training']['lines'],
             "skills": skills,
-            "experience": resume_segments['work_and_employment']
+            "experience": resume_segments['work_and_employment']['sentences']
         }
 
 

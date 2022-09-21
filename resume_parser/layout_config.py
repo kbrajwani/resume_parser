@@ -25,6 +25,7 @@ RESUME_HEADERS = {
 
         ],
     'contact_info':[
+        'contact',
         'personal info', 
         'personal profile',
         ],
@@ -43,11 +44,11 @@ RESUME_HEADERS = {
         'specialized skills',
         'technical skills',
         'computer skills',
-        'personal skills',
         'computer knowledge',        
         'technologies',
         'technical experience',
         'proficiencies',
+        'Technologies Used',
         'language competencies and skills',
         'programming languages',
         'competencies'
@@ -75,7 +76,8 @@ RESUME_HEADERS = {
         'certificates', 
         'certifications',
         'misc',
-        'miscllaneous'
+        'miscllaneous',
+        'Courses and certifications'
         
         ],
     'education_and_training':[
@@ -108,6 +110,7 @@ RESUME_HEADERS = {
         'hobbies', 
         'interests',
         'other skills',
+        'Personal Skill',
         'inter personal skills',
         'inter-personal skills',
         'interpersonal skills'
