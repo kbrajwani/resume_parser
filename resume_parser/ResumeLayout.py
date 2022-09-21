@@ -391,9 +391,9 @@ class ResumeRecon:
                         word['top'] >= section[div]['top'] and \
                             word['x1'] <= section[div]['x1'] and \
                                 word['bottom'] <= section[div]['bottom']):
-                        
-                        self.columns[page][div].append(word)
-                        self.columns[page]['free_div'].remove(word)
+
+                            self.columns[page][div].append(word)
+                            self.columns[page]['free_div'].remove(word) if (word in self.columns[page]['free_div']) else ''
 
     def segment_header_words(self):
         self.segments = {}
