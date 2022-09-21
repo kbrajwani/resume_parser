@@ -390,7 +390,7 @@ class resumeparse(object):
         return job_titles
 
     def get_degree(text):
-        degree_df = pd.read_csv('degree.csv')
+        degree_df = pd.read_csv(os.path.join(base_path, 'degree.csv'))
         extracted = process.extractOne(text, degree_df['degree'].to_list(), scorer=fuzz.ratio)
         if extracted[1]>95:
             return extracted[0]
@@ -471,6 +471,6 @@ class resumeparse(object):
 
 
 if __name__ == "__main__":
-    file = "/home/aman/projects/resume/tests/samples/RakshitResume.pdf"
+    file = "/home/aman/projects/resume/tests/samples/Dhayanand_Resume.pdf"
     data = resumeparse.read_file(file)
     print(data)
