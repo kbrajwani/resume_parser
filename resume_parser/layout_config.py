@@ -25,6 +25,7 @@ RESUME_HEADERS = {
 
         ],
     'contact_info':[
+        'about',
         'contact',
         'personal info', 
         'personal profile',
@@ -35,11 +36,12 @@ RESUME_HEADERS = {
         'key skills',
         'credentials',
         'areas of experience',
-        'areas of expertise',
         'areas of knowledge',
+        'AREAS OF EXPERTISE',
         'skills',
         "other abilities",
         'career related skills',
+        'KEY SKILLS AND COMPETENCIES',
         'professional skills',
         'specialized skills',
         'technical skills',
@@ -60,6 +62,7 @@ RESUME_HEADERS = {
         'work history',
         'work experience',
         'experience',
+        'professional experience',
         'professional experience',
         'professional background',
         'additional experience',
@@ -95,6 +98,7 @@ RESUME_HEADERS = {
         'educational training',
         'education and training',
         'academic training',
+        'ACADEMIC QUALIFICATIONS'
     ],
     'interests':[
         'hobbies', 
