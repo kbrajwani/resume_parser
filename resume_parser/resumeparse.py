@@ -683,14 +683,17 @@ class resumeparse(object):
             skills = resumeparse.extract_skills(full_text)
         skills = list(dict.fromkeys(skills).keys())
         
-        return {
-            "email": email,
-            "phone": phone,
-            "name": name,
-            "total_exp": total_exp,
-            "university": university,
-            "designition": designition,
-            "degree": degree,
-            "skills": skills,
-            "Companies worked at": company_working
-        }
+        a = {
+            "email": [email],
+            "phone": [phone],
+            "name": [name],
+            "total_exp": [total_exp],
+            "university": [university],
+            "designition": [designition],
+            "degree": [degree],
+            "skills": [skills],
+            "Companies worked at": [company_working]} 
+        
+        return pd.DataFrame.from_dict(a)
+        
+        
