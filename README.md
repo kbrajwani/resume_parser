@@ -1,5 +1,4 @@
 # Resume parser
-Premium resume parsing services have been moved to [Resume-Parser](https://www.resume-parser.com/application/resumes). Please try the demo for free and give us your [feedback](https://www.resume-parser.com)
 
 ```
 A resume parser used for extracting information from resumes
@@ -106,3 +105,7 @@ The module would return a dictionary with result as follows:
 ```
 
 [<img alt="alt_text"  src="coffee.png" />](https://www.payumoney.com/paybypayumoney/#/147695053B73CAB82672E715A52F9AA5)
+
+## Custom training
+You can use the following notebook to train the spacy model on your custom data. Following notebook is training the spacy model to identify the Degree in the given text.
+https://colab.research.google.com/drive/1aSn5tMWU2Lbo4eEPi0GvkBC_003mXxqi?usp=sharing
